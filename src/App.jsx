@@ -1,34 +1,63 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
+const apiKey = import.meta.env.VITE_SPOTIFY_API_KEY
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [song, setSong] = useState('')
+  const [songs, setSongs] = useState([])
+
+  function handleSearch(e) {
+    e.preventDefault();
+    if (song.trim() === '') {
+      alert('Please insert name of song')
+      return
+    }
+    setSong('')
+    getSong(song)
+  }
+  const options = {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Key': apiKey,
+      'X-RapidAPI-Host': 'spotify23.p.rapidapi.com'
+    }
+  };
+
+  async function getSong(song) {
+    try {
+      let url = `https://spotify23.p.rapidapi.com/search/?q=${song}&type=tracks&offset=0&limit=5&numberOfTopResults=5`;
+
+      let data = await fetch(url, options);
+      let res = await data.json();
+      console.log(res.tracks.items);
+      setSongs(res.tracks.items);
+    } catch (error) {
+      console.log(`ups... Error:  ${error}`);
+    }
+  }
 
   return (
-    <>
+    <div className='principal-container'>
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <h1>Spotify Search</h1>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      <form className='form-spotify' onSubmit={handleSearch}>
+        <input type="text" value={song} placeholder='Name of the song' onChange={e => setSong(e.target.value)} />
+        <button type='submit'>Search</button>
+      </form>
+      {
+        songs.map((song, index) => ( 
+          <>
+            <div key={index}>
+              <img src={song.data.albumOfTrack.coverArt.sources[0].url} alt="" />
+              <h2>{song.data.name}</h2>
+            </div>
+          </>
+        ))
+
+      }
+    </div>
   )
 }
 
